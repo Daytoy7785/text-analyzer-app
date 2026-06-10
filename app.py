@@ -817,33 +817,41 @@ def create_matplotlib_wordcloud(word_freq):
 
     try:
         import matplotlib.font_manager as fm
+        import os
         
-        font_paths = [
-            '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-            '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
-            '/usr/share/fonts/truetype/arphic/ukai.ttc',
-            '/usr/share/fonts/truetype/arphic/uming.ttc',
-            '/usr/share/fonts/truetype/noto/NotoSansCJK-SC.ttc',
-            '/usr/share/fonts/truetype/noto/NotoSansCJK-TC.ttc',
-            'msyh.ttc',
-            'simhei.ttf',
-            'simsun.ttc',
-            'STHeiti Light.ttc',
-            'Hiragino Sans GB.ttc',
-            '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
-        ]
-
         font_path = None
+        
+        font_paths = fm.findSystemFonts(fontpaths=None, fontext='ttf')
+        font_paths += fm.findSystemFonts(fontpaths=None, fontext='ttc')
+        
+        chinese_fonts = [
+            'wqy-microhei', 'wqy-zenhei', 'ukai', 'uming', 
+            'NotoSansCJK', 'NotoSerifCJK', 'SimHei', 'SimSun',
+            'Microsoft YaHei', 'STHeiti', 'Hiragino Sans GB',
+            'DroidSansFallback'
+        ]
+        
         for path in font_paths:
-            try:
-                WordCloud(font_path=path)
-                font_path = path
+            for font_name in chinese_fonts:
+                if font_name.lower() in path.lower():
+                    font_path = path
+                    break
+            if font_path:
                 break
-            except:
-                continue
 
         if font_path is None:
-            font_path = None
+            font_paths_list = [
+                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+                '/usr/share/fonts/truetype/noto/NotoSansCJK-SC.ttc',
+                '/usr/share/fonts/truetype/noto/NotoSerifCJK-SC.ttc',
+                '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
+                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            ]
+            for path in font_paths_list:
+                if os.path.exists(path):
+                    font_path = path
+                    break
 
         wordcloud = WordCloud(
             font_path=font_path,
