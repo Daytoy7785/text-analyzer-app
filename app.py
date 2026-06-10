@@ -810,110 +810,6 @@ def get_download_link(df, filename, file_format='csv'):
     return href
 
 
-def create_matplotlib_wordcloud(word_freq):
-    word_dict = dict(word_freq[:50])
-
-    plt.figure(figsize=(12, 6))
-
-    try:
-        import matplotlib.font_manager as fm
-        import os
-        
-        font_path = None
-        
-        font_paths = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-        font_paths += fm.findSystemFonts(fontpaths=None, fontext='ttc')
-        
-        chinese_fonts = [
-            'wqy-microhei', 'wqy-zenhei', 'ukai', 'uming', 
-            'NotoSansCJK', 'NotoSerifCJK', 'SimHei', 'SimSun',
-            'Microsoft YaHei', 'STHeiti', 'Hiragino Sans GB',
-            'DroidSansFallback'
-        ]
-        
-        for path in font_paths:
-            for font_name in chinese_fonts:
-                if font_name.lower() in path.lower():
-                    font_path = path
-                    break
-            if font_path:
-                break
-
-        if font_path is None:
-            font_paths_list = [
-                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
-                '/usr/share/fonts/truetype/noto/NotoSansCJK-SC.ttc',
-                '/usr/share/fonts/truetype/noto/NotoSerifCJK-SC.ttc',
-                '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            ]
-            for path in font_paths_list:
-                if os.path.exists(path):
-                    font_path = path
-                    break
-
-        wordcloud = WordCloud(
-            font_path=font_path,
-            width=1000,
-            height=500,
-            background_color='#1e293b',
-            max_words=100,
-            max_font_size=120,
-            random_state=42,
-            colormap='viridis',
-            prefer_horizontal=0.9
-        ).generate_from_frequencies(word_dict)
-
-    except Exception as e:
-        try:
-            wordcloud = WordCloud(
-                width=1000,
-                height=500,
-                background_color='#1e293b',
-                max_words=100,
-                max_font_size=120,
-                random_state=42,
-                colormap='viridis',
-                prefer_horizontal=0.9
-            ).generate_from_frequencies(word_dict)
-        except Exception as e2:
-            st.warning(f"词云生成失败: {str(e2)}，将显示条形图替代")
-            return create_bar_chart_as_image(word_freq[:20])
-
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    plt.tight_layout(pad=0)
-
-    buf = BytesIO()
-    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-    buf.seek(0)
-    plt.close()
-
-    return buf
-
-
-def create_bar_chart_as_image(word_freq):
-    words = [item[0] for item in word_freq]
-    counts = [item[1] for item in word_freq]
-
-    plt.figure(figsize=(12, 6))
-    bars = plt.barh(words[::-1], counts[::-1], color='#6366f1')
-    plt.xlabel('出现次数', color='#94a3b8')
-    plt.title('词频条形图', color='#f1f5f9', fontsize=16)
-    plt.tick_params(axis='both', colors='#94a3b8')
-    plt.gcf().set_facecolor('#1e293b')
-    plt.gca().set_facecolor('#1e293b')
-    plt.tight_layout()
-
-    buf = BytesIO()
-    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-    buf.seek(0)
-    plt.close()
-
-    return buf
-
-
 # ==================== 侧边栏配置 ====================
 
 with st.sidebar:
@@ -1150,12 +1046,6 @@ if st.session_state.analysis_data['word_freq']:
         if chart:
             st_pyecharts(chart, height="550px")
 
-            if chart_type == "wordcloud":
-                st.markdown("---")
-                st.markdown("### 🎨 Matplotlib词云图")
-                buf = create_matplotlib_wordcloud(word_freq)
-                st.image(buf, width="stretch")
-        
         st.markdown('</div>', unsafe_allow_html=True)
 
     with tab3:
@@ -1312,20 +1202,6 @@ if st.session_state.analysis_data['word_freq']:
                 st.code(chart_html[:500] + "..." if len(chart_html) > 500 else chart_html, language='html')
                 st.markdown('</div>', unsafe_allow_html=True)
 
-        if chart_type == "wordcloud":
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown('<div class="card-header"><div class="card-icon">🎨</div><div class="card-title">导出Matplotlib词云</div></div>', unsafe_allow_html=True)
-            buf = create_matplotlib_wordcloud(word_freq)
-
-            btn = st.download_button(
-                label="📥 下载词云图片",
-                data=buf,
-                file_name=f"词云图_{timestamp}.png",
-                mime="image/png",
-                use_container_width=True
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
-        
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
