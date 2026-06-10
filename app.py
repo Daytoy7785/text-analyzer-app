@@ -816,7 +816,15 @@ def create_matplotlib_wordcloud(word_freq):
     plt.figure(figsize=(12, 6))
 
     try:
+        import matplotlib.font_manager as fm
+        
         font_paths = [
+            '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+            '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+            '/usr/share/fonts/truetype/arphic/ukai.ttc',
+            '/usr/share/fonts/truetype/arphic/uming.ttc',
+            '/usr/share/fonts/truetype/noto/NotoSansCJK-SC.ttc',
+            '/usr/share/fonts/truetype/noto/NotoSansCJK-TC.ttc',
             'msyh.ttc',
             'simhei.ttf',
             'simsun.ttc',
@@ -850,8 +858,20 @@ def create_matplotlib_wordcloud(word_freq):
         ).generate_from_frequencies(word_dict)
 
     except Exception as e:
-        st.warning(f"词云生成失败: {str(e)}，将显示条形图替代")
-        return create_bar_chart_as_image(word_freq[:20])
+        try:
+            wordcloud = WordCloud(
+                width=1000,
+                height=500,
+                background_color='#1e293b',
+                max_words=100,
+                max_font_size=120,
+                random_state=42,
+                colormap='viridis',
+                prefer_horizontal=0.9
+            ).generate_from_frequencies(word_dict)
+        except Exception as e2:
+            st.warning(f"词云生成失败: {str(e2)}，将显示条形图替代")
+            return create_bar_chart_as_image(word_freq[:20])
 
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis('off')
@@ -901,7 +921,7 @@ with st.sidebar:
     if input_mode == 'URL链接':
         url = st.text_input(
             "🌐 输入文章URL:",
-            value="",
+            value="https://icpc.pku.edu.cn/jj/index.htm",
             help="请输入要分析的网页URL"
         )
     else:
